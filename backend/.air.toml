@@ -1,0 +1,8 @@
+[build]
+cmd = "swag init --dir ./cmd/app,./controllers,./dtos --output ./docs --parseDependency --parseInternal --parseDepth 4 && go build -o tmp/main ./cmd/app"
+bin = "tmp/main"
+include_ext = ["go"]
+exclude_dir=["tmp", "docs", "models"]
+
+[watcher]
+ignore_dirs= ["docs", "models"]
