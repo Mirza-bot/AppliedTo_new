@@ -5,7 +5,7 @@ import (
 	"strconv"
 	"time"
 
-	userdtos "appliedTo/dtos/user_dtos"
+	"appliedTo/dtos/user_dtos"
 	"appliedTo/models"
 	"appliedTo/utils"
 
@@ -19,7 +19,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param   id  path  int  true  "User ID"
-// @Success 200 {object} userdtos.UserResponseDto "Successfully retrieved user"
+// @Success 200 {object} userdtos.UserPublicDto "Successfully retrieved user"
 // @Failure 400 "Invalid ID format"
 // @Failure 404 "User not found"
 // @Failure 404 "Database query failed"
@@ -43,12 +43,13 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	response := userdtos.UserResponseDto {
-		ID: user.ID,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Email: user.Email,
-		Created: user.Created,
+	response := userdtos.UserPublicDto {
+		BaseUserDto: userdtos.BaseUserDto{
+			ID: user.ID,
+			FirstName: user.FirstName,
+			LastName: user.LastName,
+			Email: user.Email,
+		},
 	}
 
 	c.JSON(http.StatusOK, gin.H{"user": response})
@@ -115,12 +116,13 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	response := userdtos.UserResponseDto {
-		ID: user.ID,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Email: user.Email,
-		Created: user.Created,
+	response := userdtos.UserPublicDto {
+		BaseUserDto: userdtos.BaseUserDto{
+			ID: user.ID,
+			FirstName: user.FirstName,
+			LastName: user.LastName,
+			Email: user.Email,
+		},
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": response})
@@ -157,7 +159,7 @@ func DeleteUser(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   user  body  userdtos.UserModifyDto  true  "User data"
-// @Success 200 {object} userDtos.UserResponseDto "User successfully modified."
+// @Success 200 {object} userdtos.UserPublicDto "User successfully modified."
 // @Failure 400 "Invalid ID format"
 // @Failure 404 "User not found"
 // @Failure 404 "Database query failed"
@@ -206,12 +208,13 @@ func ModifyUser(c *gin.Context) {
 		return
 	}
 
-	response := userdtos.UserResponseDto {
-		ID: user.ID,
-		FirstName: user.FirstName,
-		LastName: user.LastName,
-		Email: user.Email,
-		Created: user.Created,
+	response := userdtos.UserPublicDto {
+		BaseUserDto: userdtos.BaseUserDto{
+			ID: user.ID,
+			FirstName: user.FirstName,
+			LastName: user.LastName,
+			Email: user.Email,
+		},
 	}
 
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": response})
