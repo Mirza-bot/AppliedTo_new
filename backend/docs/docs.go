@@ -66,6 +66,44 @@ const docTemplate = `{
                         }
                     }
                 }
+            }
+        },
+        "/user/{id}": {
+            "get": {
+                "description": "Get detailed information about a user",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "user"
+                ],
+                "summary": "Get a user by ID",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "User ID",
+                        "name": "id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successfully retrieved user",
+                        "schema": {
+                            "$ref": "#/definitions/appliedTo_dtos_user_dtos.UserResponseDto"
+                        }
+                    },
+                    "400": {
+                        "description": "Invalid ID format"
+                    },
+                    "404": {
+                        "description": "Database query failed"
+                    }
+                }
             },
             "delete": {
                 "description": "Remove the user from the database by providing the user-ID.",
@@ -138,44 +176,6 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/user/{id}": {
-            "get": {
-                "description": "Get detailed information about a user",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "user"
-                ],
-                "summary": "Get a user by ID",
-                "parameters": [
-                    {
-                        "type": "integer",
-                        "description": "User ID",
-                        "name": "id",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "Successfully retrieved user",
-                        "schema": {
-                            "$ref": "#/definitions/models.User"
-                        }
-                    },
-                    "400": {
-                        "description": "Invalid ID format"
-                    },
-                    "404": {
-                        "description": "Database query failed"
-                    }
-                }
-            }
         }
     },
     "definitions": {
@@ -219,26 +219,31 @@ const docTemplate = `{
                 }
             }
         },
-        "models.User": {
+        "appliedTo_dtos_user_dtos.UserResponseDto": {
             "type": "object",
             "properties": {
                 "created": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "2025-07-27T12:00:00Z"
                 },
                 "email": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "john@example.com"
                 },
                 "firstName": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "John"
                 },
                 "id": {
-                    "type": "integer"
+                    "type": "integer",
+                    "example": 1
                 },
                 "lastName": {
-                    "type": "string"
+                    "type": "string",
+                    "example": "Doe"
                 }
             }
-        }
+        },
     }
 }`
 

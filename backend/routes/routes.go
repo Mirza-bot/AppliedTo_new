@@ -11,7 +11,7 @@ import (
 )
 
 func SetupAuthRoutes(router *gin.Engine) {
-    log.Println("Registering login route")
+    log.Println("Registering auth routes")
     auth := router.Group("/auth")
     {
         auth.GET("/login", controllers.Login)

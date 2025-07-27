@@ -19,7 +19,7 @@ import (
 // @Accept  json
 // @Produce  json
 // @Param   id  path  int  true  "User ID"
-// @Success 200 {object} models.User "Successfully retrieved user"
+// @Success 200 {object} userdtos.UserResponseDto "Successfully retrieved user"
 // @Failure 400 "Invalid ID format"
 // @Failure 404 "User not found"
 // @Failure 404 "Database query failed"
@@ -43,7 +43,15 @@ func GetUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"user": user})
+	response := userdtos.UserResponseDto {
+		ID: user.ID,
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Email: user.Email,
+		Created: user.Created,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"user": response})
 }
 
 // @Summary Create a new user
@@ -107,7 +115,15 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": user})
+	response := userdtos.UserResponseDto {
+		ID: user.ID,
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Email: user.Email,
+		Created: user.Created,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": response})
 }
 
 // @Summary Delete a user.
@@ -119,7 +135,7 @@ func CreateUser(c *gin.Context) {
 // @Success 200 "User deleted modified."
 // @Failure 400 "Invalid ID format"
 // @Failure 500 "Could not delete user"
-// @Router /user [delete]
+// @Router /user/{id} [delete]
 func DeleteUser(c *gin.Context) {
 	userID := c.Param("id")
 	id, err := strconv.Atoi(userID)
@@ -141,11 +157,11 @@ func DeleteUser(c *gin.Context) {
 // @Accept  json
 // @Produce  json
 // @Param   user  body  userdtos.UserModifyDto  true  "User data"
-// @Success 200 {object} models.User "User successfully modified."
+// @Success 200 {object} userDtos.UserResponseDto "User successfully modified."
 // @Failure 400 "Invalid ID format"
 // @Failure 404 "User not found"
 // @Failure 404 "Database query failed"
-// @Router /user [patch]
+// @Router /user/{id} [patch]
 func ModifyUser(c *gin.Context) {
 	var userDto userdtos.UserModifyDto
 	if err := c.ShouldBindJSON(&userDto); err != nil {
@@ -190,5 +206,13 @@ func ModifyUser(c *gin.Context) {
 		return
 	}
 
-	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": user})
+	response := userdtos.UserResponseDto {
+		ID: user.ID,
+		FirstName: user.FirstName,
+		LastName: user.LastName,
+		Email: user.Email,
+		Created: user.Created,
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": response})
 }
