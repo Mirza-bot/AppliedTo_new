@@ -32,6 +32,11 @@ certs/*.crt
 # Ignore the Air temp files
 tmp/
 
+# Ignore swagger generated files
+**/swagger.json
+**/swagger.yaml
+**/docs.go
+
 # Mac specific
 .DS_Store
 
