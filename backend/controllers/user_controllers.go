@@ -60,7 +60,7 @@ func GetUser(c *gin.Context) {
 // @Tags user
 // @Accept  json
 // @Produce  json
-// @Param   user  body  userdtos.UserPublicDto  true  "User data"
+// @Param   user  body  userdtos.UserCreateDto  true  "User data"
 // @Success 200 {object} map[string]interface{} "User created successfully"
 // @Failure 400 {object} map[string]string "Invalid input or email already in use"
 // @Failure 500 {object} map[string]string "Could not create user"
@@ -166,6 +166,7 @@ func DeleteUser(c *gin.Context) {
 // @Router /user/{id} [patch]
 func ModifyUser(c *gin.Context) {
 	var userDto userdtos.UserModifyDto
+
 	if err := c.ShouldBindJSON(&userDto); err != nil {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
