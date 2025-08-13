@@ -30,6 +30,18 @@ func SetupUserRoutes(router *gin.Engine) {
     }
 }
 
+func SetupJobApplicationRoutes(router *gin.Engine) {
+	log.Println("Registering job application routes")
+	jobApplication := router.Group("/job_application")
+	{
+		jobApplication.POST("/", controllers.CreateJobApplication)
+		jobApplication.GET("/:id", controllers.GetJobApplication)
+		jobApplication.PUT("/:id", controllers.UpdateJobApplication)
+		jobApplication.PATCH("/:id", controllers.PatchJobApplication)
+		jobApplication.DELETE("/:id", controllers.DeleteJobApplication)
+	}
+}
+
 func SetupRoutes(router *gin.Engine) {
     router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -37,6 +49,7 @@ func SetupRoutes(router *gin.Engine) {
 	log.Println("Setting up routes...")
     SetupAuthRoutes(router)
     SetupUserRoutes(router)
+	SetupJobApplicationRoutes(router)
     log.Println("Routes setup completed")
 }
 

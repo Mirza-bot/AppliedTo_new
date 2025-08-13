@@ -43,6 +43,9 @@ func ConnectDatabase() {
 func Migrate(db *gorm.DB) {
     models := []any{
         &models.User{},
+		&models.JobApplication{},
+		&models.Employment{},
+		&models.SalaryRange{},
     }
 
     for _, model := range models {
