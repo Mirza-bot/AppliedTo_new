@@ -5,7 +5,7 @@ import (
 	"strconv"
 
 	"appliedTo/dtos/job_application_dtos"
-	jobApplicationMappers "appliedTo/mappers"
+	mappers "appliedTo/mappers/job_application_mappers"
 	"appliedTo/models"
 	"appliedTo/utils"
 
@@ -39,14 +39,14 @@ func CreateJobApplication(c *gin.Context) {
 		return
 	}
 
-	jobApplication := jobApplicationMappers.CreateModel(application)
+	jobApplication := mappers.CreateModel(application)
 
 	if err := db.Create(&jobApplication).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create job application"})
 		return
 	}
 
-	response := jobApplicationMappers.MapModelToPublicDto(jobApplication)
+	response := mappers.MapModelToPublicDto(jobApplication)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Job application created successfully", "job_application": response})
 }
@@ -81,7 +81,7 @@ func GetJobApplication(c *gin.Context) {
 		return
 	}
 
-	response := jobApplicationMappers.MapModelToPublicDto(application)
+	response := mappers.MapModelToPublicDto(application)
 	c.JSON(http.StatusOK, gin.H{"job_application": response})
 }
 
@@ -117,14 +117,14 @@ func PatchJobApplication(c *gin.Context) {
 		return
 	}
 
-	jobApplicationMappers.PatchModel(&m, patch)
+	mappers.PatchModel(&m, patch)
 
 	if err := db.Save(&m).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "update failed"})
 		return
 	}
 
-	resp := jobApplicationMappers.MapModelToPublicDto(m)
+	resp := mappers.MapModelToPublicDto(m)
 	c.JSON(http.StatusOK, gin.H{"message": "updated", "job_application": resp})
 }
 
@@ -169,7 +169,7 @@ func UpdateJobApplication(c *gin.Context) {
 		return
 	}
 
-	jobApplication = jobApplicationMappers.CreateModel(application)
+	jobApplication = mappers.CreateModel(application)
 
 
 	if err := db.Model(&jobApplication).Updates(jobApplication).Error; err != nil {
@@ -177,7 +177,7 @@ func UpdateJobApplication(c *gin.Context) {
 		return
 	}
 
-	response := jobApplicationMappers.MapModelToPublicDto(jobApplication)
+	response := mappers.MapModelToPublicDto(jobApplication)
 
 	c.JSON(http.StatusOK, gin.H{"message": "Job application updated successfully", "job_application": response})
 }

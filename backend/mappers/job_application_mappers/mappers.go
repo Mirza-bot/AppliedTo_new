@@ -1,4 +1,4 @@
-package jobApplicationMappers
+package mappers
 
 import (
 	"appliedTo/dtos/job_application_dtos"
