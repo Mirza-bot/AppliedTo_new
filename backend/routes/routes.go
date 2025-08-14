@@ -2,12 +2,13 @@ package routes
 
 import (
 	"appliedTo/controllers"
+	_ "appliedTo/docs"
+	"appliedTo/middleware"
 	"log"
-    _ "appliedTo/docs"
 
 	"github.com/gin-gonic/gin"
-    "github.com/swaggo/gin-swagger"
 	"github.com/swaggo/files"
+	"github.com/swaggo/gin-swagger"
 )
 
 func SetupAuthRoutes(router *gin.Engine) {
@@ -22,23 +23,26 @@ func SetupAuthRoutes(router *gin.Engine) {
 func SetupUserRoutes(router *gin.Engine) {
 	log.Println("Registering user routes")
     user := router.Group("/user")
+	exsistingUser := user.Group("/:id", middleware.RequireUserID())
     {
         user.POST("/", controllers.CreateUser)
-        user.GET("/:id", controllers.GetUser)
-        user.DELETE("/:id", controllers.DeleteUser)
-        user.PATCH("/:id", controllers.ModifyUser)
+        exsistingUser.GET("", controllers.GetUser)
+        exsistingUser.DELETE("", controllers.DeleteUser)
+        exsistingUser.PUT("", controllers.ModifyUser)
+        exsistingUser.PATCH("", controllers.ModifyUser)
     }
 }
 
 func SetupJobApplicationRoutes(router *gin.Engine) {
 	log.Println("Registering job application routes")
 	jobApplication := router.Group("/job_application")
+	exsistingJobApplication := jobApplication.Group("/:id", middleware.RequireJobApplicationID())
 	{
 		jobApplication.POST("/", controllers.CreateJobApplication)
-		jobApplication.GET("/:id", controllers.GetJobApplication)
-		jobApplication.PUT("/:id", controllers.UpdateJobApplication)
-		jobApplication.PATCH("/:id", controllers.PatchJobApplication)
-		jobApplication.DELETE("/:id", controllers.DeleteJobApplication)
+		exsistingJobApplication.GET("", controllers.GetJobApplication)
+		exsistingJobApplication.PUT("", controllers.UpdateJobApplication)
+		exsistingJobApplication.PATCH("", controllers.PatchJobApplication)
+		exsistingJobApplication.DELETE("", controllers.DeleteJobApplication)
 	}
 }
 
