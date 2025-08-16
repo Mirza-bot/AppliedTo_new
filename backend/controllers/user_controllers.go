@@ -2,58 +2,16 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
-	"time"
 
 	"appliedTo/dtos/user_dtos"
+	mappers "appliedTo/mappers/user_mappers"
+	"appliedTo/middleware"
 	"appliedTo/models"
 	"appliedTo/utils"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 )
-
-// @Summary Get a user by ID
-// @Description Get detailed information about a user
-// @Tags user
-// @Accept  json
-// @Produce  json
-// @Param   id  path  int  true  "User ID"
-// @Success 200 {object} userdtos.UserPublicDto "Successfully retrieved user"
-// @Failure 400 "Invalid ID format"
-// @Failure 404 "User not found"
-// @Failure 404 "Database query failed"
-// @Router /user/{id} [get]
-func GetUser(c *gin.Context) {
-	var userId = c.Param("id")
-	id, err := strconv.Atoi(userId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
-
-	var user models.User
-
-	if err := db.First(&user, id).Error; err != nil {
-		if err == gorm.ErrRecordNotFound {
-			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-			return
-		}
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Databse query failed"})
-		return
-	}
-
-	response := userdtos.UserPublicDto {
-		BaseUserDto: userdtos.BaseUserDto{
-			ID: user.ID,
-			FirstName: user.FirstName,
-			LastName: user.LastName,
-			Email: user.Email,
-		},
-	}
-
-	c.JSON(http.StatusOK, gin.H{"user": response})
-}
 
 // @Summary Create a new user
 // @Description Creates a new user with the provided name and email. Ensures the email is unique.
@@ -69,12 +27,16 @@ func CreateUser(c *gin.Context) {
 	var userDto userdtos.UserCreateDto
 
 	if err := c.ShouldBindJSON(&userDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
 
-	if userDto.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "An Email is required."})
+	if !utils.ValidateRequiredFields(c, []utils.RequiredField{
+		{Value: userDto.FirstName, Name: "Firstname"},
+		{Value: userDto.LastName, Name: "Lastname"},
+		{Value: userDto.Email, Name: "Email"},
+		{Value: userDto.Password, Name: "Password"},
+	}) {
 		return
 	}
 
@@ -89,95 +51,70 @@ func CreateUser(c *gin.Context) {
 		return
 	}
 
-	if userDto.FirstName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "A firstname is required."})
-		return
-	}
-
-	if userDto.LastName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "A lastname ist required."})
-		return
-	}
-
-	if userDto.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "A password is required."})
-		return
-	}
-
-	user := models.User{
-		FirstName: userDto.FirstName,
-		LastName:  userDto.LastName,
-		Email:     userDto.Email,
-		Created:   time.Now(),
-	}
+	user := mappers.CreateModel(userDto)
 
 	if err := db.Create(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not create user"})
 		return
 	}
 
-	response := userdtos.UserPublicDto {
-		BaseUserDto: userdtos.BaseUserDto{
-			ID: user.ID,
-			FirstName: user.FirstName,
-			LastName: user.LastName,
-			Email: user.Email,
-		},
-	}
+	response := mappers.MapModelToPublicDto(user)
 
 	c.JSON(http.StatusOK, gin.H{"message": "User created successfully", "user": response})
 }
 
-// @Summary Delete a user.
-// @Description Remove the user from the database by providing the user-ID.
+// @Summary Get a user by ID
+// @Description Get detailed information about a user
 // @Tags user
 // @Accept  json
 // @Produce  json
 // @Param   id  path  int  true  "User ID"
-// @Success 200 "User deleted modified."
-// @Failure 400 "Invalid ID format"
-// @Failure 500 "Could not delete user"
-// @Router /user/{id} [delete]
-func DeleteUser(c *gin.Context) {
-	userID := c.Param("id")
-	id, err := strconv.Atoi(userID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
-
-	if err := db.Delete(&models.User{}, id).Error; err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete User"})
-	}
-
-	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
-}
-
-// @Summary Modify a user.
-// @Description Modify user user data by providing new data and the user-ID.
-// @Tags user
-// @Accept  json
-// @Produce  json
-// @Param   user  body  userdtos.UserModifyDto  true  "User data"
-// @Success 200 {object} userdtos.UserPublicDto "User successfully modified."
+// @Success 200 {object} userdtos.UserPublicDto "Successfully retrieved user"
 // @Failure 400 "Invalid ID format"
 // @Failure 404 "User not found"
 // @Failure 404 "Database query failed"
-// @Router /user/{id} [patch]
-func ModifyUser(c *gin.Context) {
-	var userDto userdtos.UserModifyDto
+// @Router /user/{id} [get]
+func GetUser(c *gin.Context) {
+	id := c.GetUint(middleware.CtxKeyUserID)
 
-	if err := c.ShouldBindJSON(&userDto); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+	var user models.User
+
+	if err := db.First(&user, id).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+			return
+		}
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Databse query failed"})
 		return
 	}
 
-	userID := c.Param("id")
-	id, err := strconv.Atoi(userID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
+	response := mappers.MapModelToPublicDto(user)
+
+	c.JSON(http.StatusOK, gin.H{"user": response})
+}
+
+// @Summary      Partially update a user
+// @Description  Updates only the provided fields on the user with the given ID.
+// @Tags         user
+// @Accept       json
+// @Produce      json
+// @Param        id       path     int   true  "User ID" example(123)
+// @Param        payload  body     userdtos.UserPatchDto true  "Fields to patch"
+// @Success      200      {object} userdtos.UserPublicDto
+// @Failure      400      "Invalid request payload or invalid field values"
+// @Failure      404      "User not found"
+// @Failure      409      "Email already in use"
+// @Failure      500      "Could not update user"
+// @Router       /user/{id} [patch]
+func PatchUser(c *gin.Context) {
+	var dto userdtos.UserPatchDto
+
+	if err := c.ShouldBindJSON(&dto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
 		return
 	}
+
+	id := c.GetUint(middleware.CtxKeyUserID)
 
 	var user models.User
 	if err := db.First(&user, id).Error; err != nil {
@@ -185,13 +122,66 @@ func ModifyUser(c *gin.Context) {
 		return
 	}
 
-	if userDto.FirstName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "A firstname is required"})
+	if dto.Email != nil {
+		if !utils.IsValidEmail(*dto.Email) {
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid email address"})
+			return
+		}
+		if *dto.Email != user.Email {
+			var count int64
+			if err := db.Model(&models.User{}).Where("email = ?", *dto.Email).Count(&count).Error; err == nil && count > 0 {
+				c.JSON(http.StatusConflict, gin.H{"error": "Email already in use"})
+				return
+			}
+		}
+	}
+
+	mappers.PatchModel(&user, dto)
+
+	if err := db.Save(user).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update user"})
 		return
 	}
 
-	if userDto.LastName == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "A lastname is required"})
+	response := mappers.MapModelToPublicDto(user)
+
+	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": response})
+}
+
+// @Summary Update a user (full replace)
+// @Description Modify user user data by providing new data and the user-ID.
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Param   id    path  int   true  "User ID" example(123)
+// @Param   user  body  userdtos.UserCreateDto  true  "User data"
+// @Success 200 {object} userdtos.UserPublicDto "User successfully modified."
+// @Failure 400 "Invalid ID format"
+// @Failure 404 "User not found"
+// @Failure 404 "Database query failed"
+// @Router /user/{id} [put]
+func UpdateUser(c *gin.Context) {
+	var userDto userdtos.UserCreateDto
+
+	if err := c.ShouldBindJSON(&userDto); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid request payload"})
+		return
+	}
+
+	id := c.GetUint(middleware.CtxKeyUserID)
+
+	var user models.User
+	if err := db.First(&user, id).Error; err != nil {
+		c.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+
+	if !utils.ValidateRequiredFields(c, []utils.RequiredField{
+		{Value: userDto.FirstName, Name: "Firstname"},
+		{Value: userDto.LastName, Name: "Lastname"},
+		{Value: userDto.Email, Name: "Email"},
+		{Value: userDto.Password, Name: "Password"},
+	}) {
 		return
 	}
 
@@ -203,20 +193,34 @@ func ModifyUser(c *gin.Context) {
 	user.FirstName = userDto.FirstName
 	user.LastName = userDto.LastName
 	user.Email = userDto.Email
+	user.Password = userDto.Password
 
-	if err := db.Model(&user).Updates(user).Error; err != nil {
+	if err := db.Save(&user).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not update user"})
 		return
 	}
 
-	response := userdtos.UserPublicDto {
-		BaseUserDto: userdtos.BaseUserDto{
-			ID: user.ID,
-			FirstName: user.FirstName,
-			LastName: user.LastName,
-			Email: user.Email,
-		},
-	}
+	response := mappers.MapModelToPublicDto(user)
 
 	c.JSON(http.StatusOK, gin.H{"message": "User updated successfully", "user": response})
+}
+
+// @Summary Delete a user.
+// @Description Remove the user from the database by providing the user-ID.
+// @Tags user
+// @Accept  json
+// @Produce  json
+// @Param  id  path int true "User ID" example(123)
+// @Success 200 "User deleted modified."
+// @Failure 400 "Invalid ID format"
+// @Failure 500 "Could not delete user"
+// @Router /user/{id} [delete]
+func DeleteUser(c *gin.Context) {
+	id := c.GetUint(middleware.CtxKeyUserID)
+
+	if err := db.Delete(&models.User{}, id).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete User"})
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "User deleted successfully"})
 }

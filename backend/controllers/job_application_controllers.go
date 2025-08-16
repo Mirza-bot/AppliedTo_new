@@ -2,10 +2,10 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"appliedTo/dtos/job_application_dtos"
 	mappers "appliedTo/mappers/job_application_mappers"
+	"appliedTo/middleware"
 	"appliedTo/models"
 	"appliedTo/utils"
 
@@ -63,12 +63,7 @@ func CreateJobApplication(c *gin.Context) {
 // @Failure 404 "Database query failed"
 // @Router /job_application/{id} [get]
 func GetJobApplication(c *gin.Context) {
-	var applicationId = c.Param("id")
-	id, err := strconv.Atoi(applicationId)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
+	id := c.GetUint(middleware.CtxKeyJobApplicationID)
 
 	var application models.JobApplication
 
@@ -98,12 +93,7 @@ func GetJobApplication(c *gin.Context) {
 // @Failure 500 "Update failed"
 // @Router /job_application/{id} [patch]
 func PatchJobApplication(c *gin.Context) {
-	id64, err := strconv.ParseUint(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "invalid id"})
-		return
-	}
-	id := uint(id64)
+	id := c.GetUint(middleware.CtxKeyJobApplicationID)
 
 	var patch jobapplicationdtos.JobApplicationPatchDto
 	if err := c.ShouldBindJSON(&patch); err != nil {
@@ -124,8 +114,8 @@ func PatchJobApplication(c *gin.Context) {
 		return
 	}
 
-	resp := mappers.MapModelToPublicDto(m)
-	c.JSON(http.StatusOK, gin.H{"message": "updated", "job_application": resp})
+	response := mappers.MapModelToPublicDto(m)
+	c.JSON(http.StatusOK, gin.H{"message": "updated", "job_application": response})
 }
 
 // @Summary Update a job application (full replace)
@@ -148,12 +138,7 @@ func UpdateJobApplication(c *gin.Context) {
 		return
 	}
 
-	applicationID := c.Param("id")
-	id, err := strconv.Atoi(applicationID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
+	id := c.GetUint(middleware.CtxKeyJobApplicationID)
 
 	var jobApplication models.JobApplication
 	if err := db.First(&jobApplication, id).Error; err != nil {
@@ -193,12 +178,7 @@ func UpdateJobApplication(c *gin.Context) {
 // @Failure 500 "Could not delete job application"
 // @Router /job_application/{id} [delete]
 func DeleteJobApplication(c *gin.Context) {
-	applicationID := c.Param("id")
-	id, err := strconv.Atoi(applicationID)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid ID format"})
-		return
-	}
+	id := c.GetUint(middleware.CtxKeyJobApplicationID)
 
 	if err := db.Delete(&models.JobApplication{}, id).Error; err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Could not delete job application"})

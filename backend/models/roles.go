@@ -1,5 +1,5 @@
 package models
 
-type Role struct {
+type UserRole struct {
 	Type string `json:"type"`
 }

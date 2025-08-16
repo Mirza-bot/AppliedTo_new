@@ -28,8 +28,8 @@ func SetupUserRoutes(router *gin.Engine) {
         user.POST("/", controllers.CreateUser)
         exsistingUser.GET("", controllers.GetUser)
         exsistingUser.DELETE("", controllers.DeleteUser)
-        exsistingUser.PUT("", controllers.ModifyUser)
-        exsistingUser.PATCH("", controllers.ModifyUser)
+        exsistingUser.PUT("", controllers.UpdateUser)
+        exsistingUser.PATCH("", controllers.PatchUser)
     }
 }
 
