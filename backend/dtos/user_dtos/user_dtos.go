@@ -15,6 +15,7 @@ type UserPatchDto struct {
     FirstName *string `json:"firstName"`
     LastName *string `json:"lastName"`
     Email *string `json:"email" gorm:"unique"`
+	Password *string `json:"password"`
 }
 
 type UserPublicDto struct {
