@@ -5,7 +5,7 @@ FROM golang:1.24
 RUN go install github.com/air-verse/air@latest
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR /cmd/server
 
 # Copy the Go module files and download dependencies
 COPY go.mod go.sum ./

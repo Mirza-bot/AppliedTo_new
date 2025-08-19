@@ -6,13 +6,15 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"appliedTo/docs"
-	"appliedTo/handlers"
-	"appliedTo/internal/config"
-	appdb "appliedTo/internal/db"
-	"appliedTo/internal/routes"
-	"appliedTo/internal/security/password"
-	userservice "appliedTo/internal/services/user_service"
-	"appliedTo/middleware"
+	"appliedTo/internal/app/jobapplication"
+	jobapplicationapi "appliedTo/internal/app/jobapplication/api"
+	"appliedTo/internal/app/user"
+	userapi "appliedTo/internal/app/user/api"
+	"appliedTo/internal/platform/config"
+	appdb "appliedTo/internal/platform/db"
+	"appliedTo/internal/platform/http/middleware"
+	"appliedTo/internal/platform/http/routes"
+	"appliedTo/internal/platform/security/password"
 )
 
 func main() {
@@ -28,16 +30,19 @@ func main() {
 
 	hasher := password.NewBcrypt(password.WithCost(cfg.BcryptCost))
 
-	userSvc := userservice.NewUserService(db, hasher)
-	userHandlers := handlers.NewUserHandlers(userSvc)
+	userSvc := user.NewService(db, hasher)
+	userHandlers := userapi.NewHandlers(userSvc)
+
+	jobApplicationSvc := jobapplication.NewService(db)
+	jobApplicationHandlers := jobapplicationapi.NewHandlers(jobApplicationSvc)
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
 	r := gin.Default()
 	routes.SetupRoutes(r, "/api/v1",
-	routes.SetupAuthRoutes(),
-	routes.SetupUserRoutes(userHandlers, middleware.RequireUserID()),
-	routes.SetupJobApplicationRoutes(middleware.RequireJobApplicationID()),
+	// routes.SetupAuthRoutes(),
+	userapi.SetupUserRoutes(userHandlers, middleware.RequireUserID()),
+	jobapplicationapi.SetupJobApplicationRoutes(jobApplicationHandlers, middleware.RequireJobApplicationID()),
 	)
 
 
