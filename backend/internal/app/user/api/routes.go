@@ -10,8 +10,6 @@ func SetupUserRoutes(h *UserHandlers, requireID gin.HandlerFunc) routes.RouteCon
 	return routes.RouteConfig{
 		Prefix: "/user",
 		Register: func(g *gin.RouterGroup) {
-			g.POST("", h.CreateUser)
-
 			withID := g.Group("/:id", requireID)
 			withID.GET("", h.GetUser)
 			withID.PUT("", h.UpdateUser)
@@ -19,4 +17,21 @@ func SetupUserRoutes(h *UserHandlers, requireID gin.HandlerFunc) routes.RouteCon
 			withID.DELETE("", h.DeleteUser)
 		},
 	}
+}
+
+type AdminRouteOpts struct {
+	RequireAuth gin.HandlerFunc
+	RequireAdmin gin.HandlerFunc
+}
+
+func SetupAdminUserRoutes(h *UserHandlers, opts AdminRouteOpts) routes.RouteConfig {
+	return routes.RouteConfig{
+		Prefix: "/admin/users",
+		Register: func(g *gin.RouterGroup) {
+			admin := g.Group("", opts.RequireAuth, opts.RequireAdmin)
+
+			admin.POST("", h.CreateUser)
+		},
+	}
+
 }

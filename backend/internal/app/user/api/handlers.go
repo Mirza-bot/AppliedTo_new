@@ -56,7 +56,7 @@ func (h *UserHandlers) CreateUser(c *gin.Context) {
 		return
 	}
 
-	resp, err := h.Svc.Create(c.Request.Context(), dto)
+	resp, _, err := h.Svc.Create(c.Request.Context(), dto)
 	if err != nil {
 		switch {
 		case errors.Is(err, user.ErrInvalidEmail):
@@ -64,7 +64,6 @@ func (h *UserHandlers) CreateUser(c *gin.Context) {
 		case errors.Is(err, user.ErrEmailInUse):
 			c.JSON(http.StatusConflict, ErrorResponse{Error: "E-Mail is already in use"})
 		default:
-			// validate.Required returns messages like "a firstname is required"
 			c.JSON(http.StatusBadRequest, ErrorResponse{Error: err.Error()})
 		}
 		return

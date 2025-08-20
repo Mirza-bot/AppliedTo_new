@@ -28,29 +28,29 @@ func NewService(db *gorm.DB, hasher interface {
 
 // -------- CREATE --------
 
-func (s *Service) Create(ctx context.Context, dto UserCreateDto) (UserPublicDto, error) {
+func (s *Service) Create(ctx context.Context, dto UserCreateDto) (UserPublicDto, uint, error) {
 	if err := validate.Required(
 		validate.Field{Name: "firstname", Value: dto.FirstName},
 		validate.Field{Name: "lastname", Value: dto.LastName},
 		validate.Field{Name: "email", Value: dto.Email},
 		validate.Field{Name: "password", Value: dto.Password},
 	); err != nil {
-		return UserPublicDto{}, err
+		return UserPublicDto{}, 0, err
 	}
 
 	normalizedEmail, err := validate.NormalizeAndValidateEmail(dto.Email)
 	if err != nil {
-		return UserPublicDto{}, ErrInvalidEmail
+		return UserPublicDto{}, 0, ErrInvalidEmail
 	}
 
 	var count int64
 	if err := s.db.WithContext(ctx).Model(&User{}).Where("email = ?", normalizedEmail).Count(&count).Error; err != nil {
-		return UserPublicDto{}, ErrEmailInUse
+		return UserPublicDto{}, 0, ErrEmailInUse
 	}
 
 	hash, err := s.hasher.Hash(dto.Password)
 	if err != nil {
-		return UserPublicDto{}, err
+		return UserPublicDto{}, 0, err
 	}
 
 	user := CreateModel(dto)
@@ -59,12 +59,12 @@ func (s *Service) Create(ctx context.Context, dto UserCreateDto) (UserPublicDto,
 
 	if err := s.db.WithContext(ctx).Create(&user).Error; err != nil {
 		if errors.Is(err, gorm.ErrDuplicatedKey) {
-			return UserPublicDto{}, ErrEmailInUse
+			return UserPublicDto{}, 0, ErrEmailInUse
 		}
-		return UserPublicDto{}, err
+		return UserPublicDto{}, 0, err
 	}
 
-	return MapModelToPublicDto(user), nil
+	return MapModelToPublicDto(user), user.ID, nil
 }
 
 // -------- READ --------

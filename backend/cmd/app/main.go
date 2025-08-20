@@ -6,6 +6,8 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"appliedTo/docs"
+	"appliedTo/internal/app/auth"
+	authapi "appliedTo/internal/app/auth/api"
 	"appliedTo/internal/app/jobapplication"
 	jobapplicationapi "appliedTo/internal/app/jobapplication/api"
 	"appliedTo/internal/app/user"
@@ -15,6 +17,7 @@ import (
 	"appliedTo/internal/platform/http/middleware"
 	"appliedTo/internal/platform/http/routes"
 	"appliedTo/internal/platform/security/password"
+	"appliedTo/internal/platform/security/token"
 )
 
 func main() {
@@ -29,22 +32,29 @@ func main() {
 	}
 
 	hasher := password.NewBcrypt(password.WithCost(cfg.BcryptCost))
+	jwtIss := &token.JWT{
+		Secret:    []byte(cfg.JWTSecret),
+		Issuer:    cfg.JWTIssuer,
+		AccessTTL: cfg.JWTAccessTTL,
+	}
 
-	userSvc := user.NewService(db, hasher)
-	userHandlers := userapi.NewHandlers(userSvc)
+	userService := user.NewService(db, hasher)
+	userHandlers := userapi.NewHandlers(userService)
 
-	jobApplicationSvc := jobapplication.NewService(db)
-	jobApplicationHandlers := jobapplicationapi.NewHandlers(jobApplicationSvc)
+	authService := auth.NewService(db, hasher, jwtIss, userService)
+	authHandlers := authapi.NewHandlers(authService)
+
+	jobApplicationService := jobapplication.NewService(db)
+	jobApplicationHandlers := jobapplicationapi.NewHandlers(jobApplicationService)
 
 	docs.SwaggerInfo.BasePath = "/api/v1"
 
 	r := gin.Default()
 	routes.SetupRoutes(r, "/api/v1",
-	// routes.SetupAuthRoutes(),
-	userapi.SetupUserRoutes(userHandlers, middleware.RequireUserID()),
-	jobapplicationapi.SetupJobApplicationRoutes(jobApplicationHandlers, middleware.RequireJobApplicationID()),
+		authapi.SetupAuthRoutes(authHandlers),
+		userapi.SetupUserRoutes(userHandlers, middleware.RequireUserID()),
+		jobapplicationapi.SetupJobApplicationRoutes(jobApplicationHandlers, middleware.RequireJobApplicationID()),
 	)
-
 
 	addr := ":" + cfg.AppPort
 	log.Printf("listening on %s", addr)
@@ -52,4 +62,3 @@ func main() {
 		log.Fatalf("server: %v", err)
 	}
 }
-
