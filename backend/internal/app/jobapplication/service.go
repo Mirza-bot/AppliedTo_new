@@ -18,9 +18,9 @@ func NewService(db *gorm.DB) *Service {
 // CREATE
 func (s *Service) Create(ctx context.Context, in JobApplicationCreateDto) (JobApplicationPublicDto, error) {
 	if err := validate.Required(
-		validate.Field{Name: "title",             Value: in.BaseJobApplicationDto.Title},
-		validate.Field{Name: "employment type",   Value: in.BaseJobApplicationDto.Employment.Type},
-		validate.Field{Name: "work location",     Value: in.BaseJobApplicationDto.Employment.WorkLocation},
+		validate.Field{Name: "title",           Value: in.BaseJobApplicationDto.Title},
+		validate.Field{Name: "employment type", Value: in.BaseJobApplicationDto.Employment.Type},
+		validate.Field{Name: "work location",   Value: in.BaseJobApplicationDto.Employment.WorkLocation},
 	); err != nil {
 		return JobApplicationPublicDto{}, err
 	}
@@ -43,31 +43,25 @@ func (s *Service) GetByID(ctx context.Context, id uint) (JobApplicationPublicDto
 
 // UPDATE (full replace)
 func (s *Service) Update(ctx context.Context, id uint, in JobApplicationCreateDto) (JobApplicationPublicDto, error) {
-	// ensure record exists
-	var existing JobApplication
-	if err := s.db.WithContext(ctx).First(&existing, id).Error; err != nil {
+	var m JobApplication
+	if err := s.db.WithContext(ctx).First(&m, id).Error; err != nil {
 		return JobApplicationPublicDto{}, err
 	}
 
 	if err := validate.Required(
-		validate.Field{Name: "title",             Value: in.BaseJobApplicationDto.Title},
-		validate.Field{Name: "employment type",   Value: in.BaseJobApplicationDto.Employment.Type},
-		validate.Field{Name: "work location",     Value: in.BaseJobApplicationDto.Employment.WorkLocation},
+		validate.Field{Name: "title",           Value: in.Title},
+		validate.Field{Name: "employment type", Value: in.Employment.Type},
+		validate.Field{Name: "work location",   Value: in.Employment.WorkLocation},
 	); err != nil {
 		return JobApplicationPublicDto{}, err
 	}
 
-	updated := CreateModel(in)       // build a fresh model from DTO
-	// apply onto the existing row (existing has the primary key set)
-	if err := s.db.WithContext(ctx).Model(&existing).Updates(updated).Error; err != nil {
-		return JobApplicationPublicDto{}, err
-	}
+	OverwriteModel(&m, in)
 
-	// reload if you need updated associations; otherwise map 'existing'
-	if err := s.db.WithContext(ctx).First(&existing, id).Error; err != nil {
+	if err := s.db.WithContext(ctx).Save(&m).Error; err != nil {
 		return JobApplicationPublicDto{}, err
 	}
-	return MapModelToPublicDto(existing), nil
+	return MapModelToPublicDto(m), nil
 }
 
 // PATCH (partial update)
@@ -82,7 +76,6 @@ func (s *Service) Patch(ctx context.Context, id uint, patch JobApplicationPatchD
 	if err := s.db.WithContext(ctx).Save(&m).Error; err != nil {
 		return JobApplicationPublicDto{}, err
 	}
-
 	return MapModelToPublicDto(m), nil
 }
 
