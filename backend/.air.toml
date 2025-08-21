@@ -2,7 +2,7 @@ root = "."
 tmp_dir = "tmp"
 
 [build]
-cmd = "swag init -g \"$(pwd)/cmd/server/main.go\" -d \"$(pwd)/cmd/server,$(pwd)/internal\" --output \"$(pwd)/docs\" --parseDependency --parseInternal --parseDepth 4 --exclude \"$(pwd)/tmp,$(pwd)/docs,$(pwd)/vendor\" && go build -o tmp/main ./cmd/server"
+cmd = "swag init -g ./cmd/server/main.go --output ./docs --parseDependency --parseInternal --parseDepth 4 --exclude ./tmp,./docs,./vendor && go build -o tmp/main ./cmd/server"
 bin = "tmp/main"
 
 include_ext = ["go","mod","sum","yaml","yml","toml","env"]
